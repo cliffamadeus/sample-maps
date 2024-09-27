@@ -3,7 +3,7 @@ class LeafletMap {
     constructor(containerId, center, zoom) {
         this.map = L.map(containerId).setView(center, zoom);
         this.initTileLayer();
-        //this.addCenterShape(center);
+        this.addCenterShape(center);
     }
 
     initTileLayer() {
@@ -36,6 +36,21 @@ class LeafletMap {
             fillOpacity: 0.1,
             radius: 100 
         }).addTo(this.map);
+
+        
+        let tooltipVisible = false;
+
+        circle.on('click', function () {
+            if (!tooltipVisible) {
+                this.bindTooltip('This is a circle shape', {
+                    permanent: true,
+                    direction: 'top'
+                }).openTooltip();
+            } else {
+                this.closeTooltip();
+            }
+            tooltipVisible = !tooltipVisible; 
+        });
     }
 
     loadSquareFromJson(url) {
@@ -48,7 +63,24 @@ class LeafletMap {
                     fillColor: 'green',
                     fillOpacity: 0.5
                 }).addTo(this.map);
+
+
+                let tooltipVisible = false;
+
+                square.on('click', function () {
+                    if (!tooltipVisible) {
+                        this.bindTooltip('This is a square shape', {
+                            permanent: true,
+                            direction: 'top'
+                        }).openTooltip();
+                    } else {
+                        this.closeTooltip();
+                    }
+                    tooltipVisible = !tooltipVisible; 
+                });
+
             })
+            
             .catch(error => console.error('Error loading square:', error));
     }
 }
