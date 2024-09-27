@@ -3,7 +3,7 @@ class LeafletMap {
     constructor(containerId, center, zoom) {
         this.map = L.map(containerId).setView(center, zoom);
         this.initTileLayer();
-        this.addCenterShape(center);
+        //this.addCenterShape(center);
     }
 
     initTileLayer() {
@@ -37,9 +37,24 @@ class LeafletMap {
             radius: 100 
         }).addTo(this.map);
     }
+
+    loadSquareFromJson(url) {
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                const vertices = data.vertices;
+                const square = L.polygon(vertices, {
+                    color: 'green',
+                    fillColor: 'green',
+                    fillOpacity: 0.5
+                }).addTo(this.map);
+            })
+            .catch(error => console.error('Error loading square:', error));
+    }
 }
 
 const myMap = new LeafletMap('map', [8.360004, 124.868419], 18);
 
 
-myMap.loadMarkersFromJson('map-data.json');
+//myMap.loadMarkersFromJson('map-data.json');
+myMap.loadSquareFromJson('square-data.json');
