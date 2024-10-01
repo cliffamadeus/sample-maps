@@ -21,6 +21,11 @@
             margin-top: .5rem;
             height: 25rem;
         }
+
+        .attendance-counter {
+            margin-left: 10px;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -55,14 +60,13 @@
 
     <div class="applet-container">
         <h3>Attendance</h3>
-        <p id="attendanceCount">NBSC Gym: 0</p>
-        <button class="btn btn-primary" id="addAttendance">NBSC Gym</button>
+
+        <div id="buttonsContainer"></div> <!-- Container for buttons and counters -->
         <div id="map"></div>
-       
     </div>
 
-    <script src="tooltip-attendance.js">
-        
+    <script src="app.js">
+   
     </script>
 </body>
 </html>
