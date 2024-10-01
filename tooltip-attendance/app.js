@@ -59,6 +59,7 @@ class AttendanceTracker {
                         <div class="col-8">
                             <h5 class="card-title">${location.name}</h5>
                             <button class="btn btn-primary" id="${location.name}-button">Check in</button>
+                            <p id="${location.name}-last-click" class="mt-2">Last checked in: Never</p>
                         </div>
                         <div class="col-4">
                             <h2 class="card-text" id="${location.name}-count">0</h2>
@@ -77,6 +78,7 @@ class AttendanceTracker {
     incrementCount(locationName, location) {
         this.attendanceCounts[locationName]++;
         this.updateCounterDisplay(locationName);
+        this.updateLastClickedDate(locationName);
         this.updateMarker(location);
     }
 
@@ -84,6 +86,14 @@ class AttendanceTracker {
         const counter = document.getElementById(`${locationName}-count`);
         if (counter) {
             counter.innerText = this.attendanceCounts[locationName];
+        }
+    }
+
+    updateLastClickedDate(locationName) {
+        const date = new Date().toLocaleString(); // Get current date and time
+        const lastClickedElement = document.getElementById(`${locationName}-last-click`);
+        if (lastClickedElement) {
+            lastClickedElement.innerText = `Last checked in: ${date}`;
         }
     }
 
@@ -96,6 +106,7 @@ class AttendanceTracker {
         }
     }
 }
+
 
 class App {
     constructor() {
