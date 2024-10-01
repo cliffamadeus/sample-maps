@@ -2,7 +2,7 @@ class LeafletMap {
     constructor(containerId, center, zoom) {
         this.map = L.map(containerId).setView(center, zoom);
         this.initTileLayer();
-        this.markers = []; // Store all markers
+        this.markers = [];
     }
 
     initTileLayer() {
@@ -13,81 +13,86 @@ class LeafletMap {
     }
 
     addMarker(latitude, longitude, title, attendanceCount) {
-        const message = `
-            <div>
-                <strong>${title}</strong><br>
-                Attendance Count: <span id="attendanceCountPopup">${attendanceCount}</span>
-            </div>
-        `;
-
-        const marker = L.marker([latitude, longitude]).bindPopup(message);
+        const popupContent = this.createPopupContent(title, attendanceCount);
+        const marker = L.marker([latitude, longitude]).bindPopup(popupContent);
         marker.addTo(this.map);
-        this.markers.push(marker); // Store the marker
-
-        // Open the popup immediately when the marker is added
+        this.markers.push(marker);
         marker.openPopup();
     }
 
-    // Method to update marker popup content
     updateMarkerPopup(marker, title, attendanceCount) {
-        const message = `
+        const popupContent = this.createPopupContent(title, attendanceCount);
+        marker.getPopup().setContent(popupContent);
+        marker.openPopup();
+    }
+
+    createPopupContent(title, attendanceCount) {
+        return `
             <div>
                 <strong>${title}</strong><br>
                 Attendance Count: <span id="attendanceCountPopup">${attendanceCount}</span>
             </div>
         `;
-        marker.getPopup().setContent(message);
-        marker.openPopup(); // Open the popup explicitly
     }
 }
 
 class AttendanceTracker {
     constructor(mapInstance) {
-        this.attendanceCounts = {}; // Store attendance counts per location
+        this.attendanceCounts = {};
         this.map = mapInstance;
     }
 
     setupEventListeners(locationData) {
         locationData.forEach(location => {
-            // Create a button container
-            const buttonContainer = document.createElement('div');
-            buttonContainer.className = 'd-flex align-items-center mb-2';
-
-            const button = document.createElement('button');
-            button.className = 'btn btn-primary';
-            button.innerText = location.message;
-            button.addEventListener('click', () => {
-                this.incrementCount(location.message, location);
-            });
-
-            // Create an attendance counter element
-            const counter = document.createElement('span');
-            counter.className = 'attendance-counter';
-            counter.id = `${location.message}-count`;
-            counter.innerText = '0'; // Initialize count to 0
-
-            // Append button and counter to the container
-            buttonContainer.appendChild(button);
-            buttonContainer.appendChild(counter);
-            document.getElementById('buttonsContainer').appendChild(buttonContainer); // Add button container to the document
-
-            this.attendanceCounts[location.message] = 0; // Initialize attendance count
+            const cardHtml = this.createCardHtml(location);
+            document.getElementById('buttonsContainer').insertAdjacentHTML('beforeend', cardHtml);
+            this.setupCardClickListener(location);
+            this.attendanceCounts[location.name] = 0; // Initialize attendance count
         });
+    }
+
+    createCardHtml(location) {
+        return `
+            <div class="card mb-2" style="width: 18rem;">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h5 class="card-title">${location.name}</h5>
+                            <button class="btn btn-primary" id="${location.name}-button">Check in</button>
+                        </div>
+                        <div class="col-4">
+                            <h2 class="card-text" id="${location.name}-count">0</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    setupCardClickListener(location) {
+        const button = document.getElementById(`${location.name}-button`);
+        button.addEventListener('click', () => this.incrementCount(location.name, location));
     }
 
     incrementCount(locationName, location) {
         this.attendanceCounts[locationName]++;
-        
-        // Update the corresponding counter display
+        this.updateCounterDisplay(locationName);
+        this.updateMarker(location);
+    }
+
+    updateCounterDisplay(locationName) {
         const counter = document.getElementById(`${locationName}-count`);
         if (counter) {
             counter.innerText = this.attendanceCounts[locationName];
         }
+    }
 
-        // Find the corresponding marker and update its popup
-        const marker = this.map.markers.find(m => m.getLatLng().lat === location.latitude && m.getLatLng().lng === location.longitude);
+    updateMarker(location) {
+        const marker = this.map.markers.find(m => 
+            m.getLatLng().lat === location.latitude && m.getLatLng().lng === location.longitude
+        );
         if (marker) {
-            this.map.updateMarkerPopup(marker, location.message, this.attendanceCounts[locationName]);
+            this.map.updateMarkerPopup(marker, location.name, this.attendanceCounts[location.name]);
         }
     }
 }
@@ -98,22 +103,18 @@ class App {
     }
 
     loadMapData() {
-        fetch('data.json') // Adjust the path to your JSON file
+        fetch('data.json')
             .then(response => response.json())
             .then(data => {
-                const myMap = new LeafletMap('map', [data[0].latitude, data[0].longitude], 16);
-
+                const myMap = new LeafletMap('map', [data[0].latitude, data[0].longitude], 18);
                 const attendanceTracker = new AttendanceTracker(myMap);
                 attendanceTracker.setupEventListeners(data);
 
-                // Add initial markers for all locations
                 data.forEach(location => {
-                    myMap.addMarker(location.latitude, location.longitude, location.message, 0);
+                    myMap.addMarker(location.latitude, location.longitude, location.name, 0);
                 });
             })
-            .catch(error => {
-                console.error('Error loading JSON:', error);
-            });
+            .catch(error => console.error('Error loading JSON:', error));
     }
 }
 
