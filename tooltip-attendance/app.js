@@ -12,25 +12,26 @@ class LeafletMap {
         }).addTo(this.map);
     }
 
-    addMarker(latitude, longitude, title, attendanceCount) {
-        const popupContent = this.createPopupContent(title, attendanceCount);
+    addMarker(latitude, longitude, title, attendanceCount, lastClickedDate) {
+        const popupContent = this.createPopupContent(title, attendanceCount, lastClickedDate);
         const marker = L.marker([latitude, longitude]).bindPopup(popupContent);
         marker.addTo(this.map);
         this.markers.push(marker);
         marker.openPopup();
     }
 
-    updateMarkerPopup(marker, title, attendanceCount) {
-        const popupContent = this.createPopupContent(title, attendanceCount);
+    updateMarkerPopup(marker, title, attendanceCount, lastClickedDate) {
+        const popupContent = this.createPopupContent(title, attendanceCount, lastClickedDate);
         marker.getPopup().setContent(popupContent);
         marker.openPopup();
     }
 
-    createPopupContent(title, attendanceCount) {
+    createPopupContent(title, attendanceCount, lastClickedDate) {
         return `
             <div>
                 <strong>${title}</strong><br>
-                Attendance Count: <span id="attendanceCountPopup">${attendanceCount}</span>
+                Attendance Count: <span id="attendanceCountPopup">${attendanceCount}</span><br>
+                Last Checked In: ${lastClickedDate}
             </div>
         `;
     }
@@ -39,6 +40,7 @@ class LeafletMap {
 class AttendanceTracker {
     constructor(mapInstance) {
         this.attendanceCounts = {};
+        this.lastClickedDates = {}; // Store last clicked dates
         this.map = mapInstance;
     }
 
@@ -48,6 +50,7 @@ class AttendanceTracker {
             document.getElementById('buttonsContainer').insertAdjacentHTML('beforeend', cardHtml);
             this.setupCardClickListener(location);
             this.attendanceCounts[location.name] = 0; // Initialize attendance count
+            this.lastClickedDates[location.name] = "Never"; // Initialize last clicked date
         });
     }
 
@@ -90,7 +93,9 @@ class AttendanceTracker {
     }
 
     updateLastClickedDate(locationName) {
-        const date = new Date().toLocaleString(); // Get current date and time
+        const date = new Date().toLocaleString();
+        this.lastClickedDates[locationName] = date; // Store last clicked date
+
         const lastClickedElement = document.getElementById(`${locationName}-last-click`);
         if (lastClickedElement) {
             lastClickedElement.innerText = `Last checked in: ${date}`;
@@ -102,11 +107,11 @@ class AttendanceTracker {
             m.getLatLng().lat === location.latitude && m.getLatLng().lng === location.longitude
         );
         if (marker) {
-            this.map.updateMarkerPopup(marker, location.name, this.attendanceCounts[location.name]);
+            const lastClickedDate = this.lastClickedDates[location.name];
+            this.map.updateMarkerPopup(marker, location.name, this.attendanceCounts[location.name], lastClickedDate);
         }
     }
 }
-
 
 class App {
     constructor() {
@@ -122,7 +127,7 @@ class App {
                 attendanceTracker.setupEventListeners(data);
 
                 data.forEach(location => {
-                    myMap.addMarker(location.latitude, location.longitude, location.name, 0);
+                    myMap.addMarker(location.latitude, location.longitude, location.name, 0, "Never");
                 });
             })
             .catch(error => console.error('Error loading JSON:', error));
