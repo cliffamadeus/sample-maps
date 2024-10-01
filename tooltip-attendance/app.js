@@ -1,31 +1,43 @@
 class LeafletMap {
+    // Constructor to initialize the Leaflet map
     constructor(containerId, center, zoom) {
+        // Create the map instance and set its view to the specified center and zoom level
         this.map = L.map(containerId).setView(center, zoom);
+        // Initialize the tile layer for the map
         this.initTileLayer();
+        // Array to store markers added to the map
         this.markers = [];
     }
 
+    // Method to initialize the tile layer using OpenStreetMap tiles
     initTileLayer() {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(this.map);
+            maxZoom: 19, // Set the maximum zoom level
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' // Attribution for the tile data
+        }).addTo(this.map); // Add the tile layer to the map
     }
 
+    // Method to add a marker to the map at specified coordinates with a popup
     addMarker(latitude, longitude, title, attendanceCount, lastClickedDate) {
+        // Create the popup content using provided data
         const popupContent = this.createPopupContent(title, attendanceCount, lastClickedDate);
+        // Create a marker and bind the popup to it
         const marker = L.marker([latitude, longitude]).bindPopup(popupContent);
-        marker.addTo(this.map);
-        this.markers.push(marker);
-        marker.openPopup();
+        marker.addTo(this.map); // Add the marker to the map
+        this.markers.push(marker); // Store the marker in the markers array
+        marker.openPopup(); // Open the popup immediately after adding
     }
 
+    // Method to update an existing marker's popup content
     updateMarkerPopup(marker, title, attendanceCount, lastClickedDate) {
+        // Create new popup content
         const popupContent = this.createPopupContent(title, attendanceCount, lastClickedDate);
+        // Set the new content to the marker's popup
         marker.getPopup().setContent(popupContent);
-        marker.openPopup();
+        marker.openPopup(); // Open the updated popup
     }
 
+    // Helper method to create popup content for markers
     createPopupContent(title, attendanceCount, lastClickedDate) {
         return `
             <div>
@@ -38,22 +50,25 @@ class LeafletMap {
 }
 
 class AttendanceTracker {
+    // Constructor to initialize the AttendanceTracker with a map instance
     constructor(mapInstance) {
-        this.attendanceCounts = {};
-        this.lastClickedDates = {}; // Store last clicked dates
-        this.map = mapInstance;
+        this.attendanceCounts = {}; // Object to track attendance counts for each location
+        this.lastClickedDates = {}; // Object to store last clicked dates for each location
+        this.map = mapInstance; // Reference to the LeafletMap instance
     }
 
+    // Method to set up event listeners for each location
     setupEventListeners(locationData) {
         locationData.forEach(location => {
-            const cardHtml = this.createCardHtml(location);
-            document.getElementById('buttonsContainer').insertAdjacentHTML('beforeend', cardHtml);
-            this.setupCardClickListener(location);
-            this.attendanceCounts[location.name] = 0; // Initialize attendance count
-            this.lastClickedDates[location.name] = "Never"; // Initialize last clicked date
+            const cardHtml = this.createCardHtml(location); // Create card HTML for the location
+            document.getElementById('buttonsContainer').insertAdjacentHTML('beforeend', cardHtml); // Add the card to the buttons container
+            this.setupCardClickListener(location); // Set up click listener for the card's button
+            this.attendanceCounts[location.name] = 0; // Initialize attendance count for the location
+            this.lastClickedDates[location.name] = "Never"; // Initialize last clicked date for the location
         });
     }
 
+    // Helper method to create HTML for a location card
     createCardHtml(location) {
         return `
             <div class="card mb-2" style="width: 18rem;">
@@ -73,40 +88,47 @@ class AttendanceTracker {
         `;
     }
 
+    // Method to set up click listener for the location card's button
     setupCardClickListener(location) {
         const button = document.getElementById(`${location.name}-button`);
-        button.addEventListener('click', () => this.incrementCount(location.name, location));
+        button.addEventListener('click', () => this.incrementCount(location.name, location)); // Increment attendance count on click
     }
 
+    // Method to increment the attendance count for a location
     incrementCount(locationName, location) {
-        this.attendanceCounts[locationName]++;
-        this.updateCounterDisplay(locationName);
-        this.updateLastClickedDate(locationName);
-        this.updateMarker(location);
+        this.attendanceCounts[locationName]++; // Increment attendance count
+        this.updateCounterDisplay(locationName); // Update display for the count
+        this.updateLastClickedDate(locationName); // Update last clicked date
+        this.updateMarker(location); // Update the marker's popup content
     }
 
+    // Method to update the displayed attendance count on the card
     updateCounterDisplay(locationName) {
         const counter = document.getElementById(`${locationName}-count`);
         if (counter) {
-            counter.innerText = this.attendanceCounts[locationName];
+            counter.innerText = this.attendanceCounts[locationName]; // Update the counter text
         }
     }
 
+    // Method to update the last clicked date for a location
     updateLastClickedDate(locationName) {
-        const date = new Date().toLocaleString();
-        this.lastClickedDates[locationName] = date; // Store last clicked date
+        const date = new Date().toLocaleString(); // Get the current date and time
+        this.lastClickedDates[locationName] = date; // Store the last clicked date
 
         const lastClickedElement = document.getElementById(`${locationName}-last-click`);
         if (lastClickedElement) {
-            lastClickedElement.innerText = `Last checked in: ${date}`;
+            lastClickedElement.innerText = `Last checked in: ${date}`; // Update the last clicked text
         }
     }
 
+    // Method to update the marker's popup content for a location
     updateMarker(location) {
+        // Find the marker corresponding to the location based on latitude and longitude
         const marker = this.map.markers.find(m => 
             m.getLatLng().lat === location.latitude && m.getLatLng().lng === location.longitude
         );
         if (marker) {
+            // Retrieve the last clicked date and update the marker's popup
             const lastClickedDate = this.lastClickedDates[location.name];
             this.map.updateMarkerPopup(marker, location.name, this.attendanceCounts[location.name], lastClickedDate);
         }
@@ -114,23 +136,26 @@ class AttendanceTracker {
 }
 
 class App {
+    // Constructor to initialize the application
     constructor() {
-        this.loadMapData();
+        this.loadMapData(); // Load map data on initialization
     }
 
+    // Method to fetch map data from a JSON file and initialize the map and attendance tracker
     loadMapData() {
-        fetch('data.json')
-            .then(response => response.json())
+        fetch('data.json') // Fetch the JSON data from the specified file
+            .then(response => response.json()) // Parse the JSON response
             .then(data => {
-                const myMap = new LeafletMap('map', [data[0].latitude, data[0].longitude], 18);
-                const attendanceTracker = new AttendanceTracker(myMap);
-                attendanceTracker.setupEventListeners(data);
+                const myMap = new LeafletMap('map', [data[0].latitude, data[0].longitude], 18); // Initialize the map with the first location's coordinates
+                const attendanceTracker = new AttendanceTracker(myMap); // Initialize the attendance tracker with the map instance
+                attendanceTracker.setupEventListeners(data); // Set up event listeners for the location data
 
+                // Add markers for each location on the map
                 data.forEach(location => {
                     myMap.addMarker(location.latitude, location.longitude, location.name, 0, "Never");
                 });
             })
-            .catch(error => console.error('Error loading JSON:', error));
+            .catch(error => console.error('Error loading JSON:', error)); // Log any errors that occur during fetching
     }
 }
 
