@@ -1,5 +1,4 @@
 class LeafletMap {
-
     constructor(containerId, center, zoom) {
         this.map = L.map(containerId).setView(center, zoom);
         this.initTileLayer();
@@ -14,43 +13,25 @@ class LeafletMap {
     }
 
     addMarker(lat, lng, message) {
-        const marker = L.marker([lat, lng]).addTo(this.map);
-        marker.bindPopup(message);
+        L.marker([lat, lng]).addTo(this.map).bindPopup(message);
     }
 
     loadMarkersFromJson(url) {
         fetch(url)
             .then(response => response.json())
-            .then(data => {
-                data.forEach(marker => {
-                    this.addMarker(marker.latitude, marker.longitude, marker.message);
-                });
-            })
+            .then(data => data.forEach(marker => 
+                this.addMarker(marker.latitude, marker.longitude, marker.message)
+            ))
             .catch(error => console.error('Error loading markers:', error));
     }
-    
+
     addCenterShape(center) {
-        const circle = L.circle(center, {
+        L.circle(center, {
             color: 'blue',
             fillColor: '#30f',
             fillOpacity: 0.1,
             radius: 100 
-        }).addTo(this.map);
-
-        
-        let tooltipVisible = false;
-
-        circle.on('click', function () {
-            if (!tooltipVisible) {
-                this.bindTooltip('This is a circle shape', {
-                    permanent: true,
-                    direction: 'top'
-                }).openTooltip();
-            } else {
-                this.closeTooltip();
-            }
-            tooltipVisible = !tooltipVisible; 
-        });
+        }).addTo(this.map).bindPopup("<b>Circle shape added</b>").openPopup();
     }
 
     loadSquareFromJson(url) {
@@ -58,35 +39,18 @@ class LeafletMap {
             .then(response => response.json())
             .then(data => {
                 const vertices = data.vertices;
-                const square = L.polygon(vertices, {
+                L.polygon(vertices, {
                     color: 'green',
                     fillColor: 'green',
                     fillOpacity: 0.5
-                }).addTo(this.map);
-
-
-                let tooltipVisible = false;
-
-                square.on('click', function () {
-                    if (!tooltipVisible) {
-                        this.bindTooltip('This is a square shape', {
-                            permanent: true,
-                            direction: 'top'
-                        }).openTooltip();
-                    } else {
-                        this.closeTooltip();
-                    }
-                    tooltipVisible = !tooltipVisible; 
-                });
-
+                }).addTo(this.map).bindPopup("<b>Square shape added</b>").openPopup();
             })
-            
             .catch(error => console.error('Error loading square:', error));
     }
 }
 
 const myMap = new LeafletMap('map', [8.360004, 124.868419], 18);
 
-
-//myMap.loadMarkersFromJson('map-data.json');
+// Load your markers and shapes
+// myMap.loadMarkersFromJson('map-data.json');
 myMap.loadSquareFromJson('square-data.json');
