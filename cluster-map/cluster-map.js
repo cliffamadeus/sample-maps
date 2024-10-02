@@ -54,6 +54,7 @@ class App {
     }
 
     // Method to create buttons for each pin
+    /*
     createButtons(data) {
         const buttonsContainer = document.getElementById('buttonsContainer'); // Get the container for buttons
         buttonsContainer.innerHTML = ''; // Clear existing buttons
@@ -68,7 +69,30 @@ class App {
             });
             buttonsContainer.appendChild(button); // Append button to the container
         });
-    }
+    }*/
+
+        createButtons(data) {
+            const buttonsContainer = document.getElementById('buttonsContainer'); // Get the container for buttons
+            buttonsContainer.innerHTML = ''; // Clear existing buttons
+        
+            // Build HTML for all buttons
+            let buttonsHTML = data.map(pin => `
+                <button class="btn btn-primary m-1" onclick="addPinToMap('${pin.name}')">
+                    ${pin.name}
+                </button>
+            `).join(''); // Create buttons for each pin and join them into a single string
+        
+            buttonsContainer.innerHTML = buttonsHTML; // Set the innerHTML of the container
+        
+            // Define function to handle adding pins
+            window.addPinToMap = (pinName) => {
+                const pin = data.find(p => p.name === pinName); // Find pin by name
+                if (pin) {
+                    this.map.addPin(pin); // Add pin to the map
+                }
+            };
+        }
+        
 }
 
 // Initialize the app
