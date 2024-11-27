@@ -39,7 +39,7 @@ class LeafletMap {
     }
 }
 
-const myMap = new LeafletMap('map', [8.360004, 124.868419], 18);
+const myMap = new LeafletMap('map', [8.360004, 124.868419], 14);
 
 // Load markers from an external JSON file
 myMap.loadMarkersFromJson('map-data.json');
@@ -56,7 +56,21 @@ class LocationCard {
         cardDiv.className = 'card location-card';
         cardDiv.innerHTML = `
             <div class="card-body">
-                <h5 class="card-title">${this.title}</h5>
+              <div class="row">
+                <div class="col-sm-4">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQepD_lSJSEvx4gh9J_TTY8FI_oylNWRkbcA&s" class="card-img-top" alt="...">
+                </div>
+                <div class="col-sm-8">
+                     <h5 class="card-title">${this.title}</h5>
+                     <p class="card-text placeholder-glow">
+                    <span class="placeholder col-7"></span>
+                    <span class="placeholder col-4"></span>
+                    <span class="placeholder col-4"></span>
+                    <span class="placeholder col-6"></span>
+                    <span class="placeholder col-8"></span>
+                    </p>
+                </div>        
+              </div>
             </div>
         `;
         
