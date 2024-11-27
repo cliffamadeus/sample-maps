@@ -16,6 +16,10 @@
             width: 90%;
         }
 
+        .applet-flex-container > div {
+          margin-top: 0.2rem;
+        }
+
         #map {
             height: 25rem;
         }
@@ -39,10 +43,21 @@
     </div>
   </nav>
     <div class="applet-container">
-        <h3>Leaflet Map Basics</h3>
-        <div id="map"></div>
+      <h3>Leaflet Map Basics</h3>
+
+      <div class="row">
+        <div class="col-4">
+          <form class="d-flex" role="search">
+            <input class="form-control me-2" type="search" aria-label="Search" id="searchLocation" placeholder="Search applets...">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+          </form>
+            <div class="applet-flex-container" id="location-container"></div>
+        </div>
+        <div class="col-8">
+          <div id="map"></div>
+        </div>   
+      </div>
     </div>
 <script src="basic-map.js"></script>
 </body>
-
 </html>

@@ -1,51 +1,94 @@
 class LeafletMap {
-    // Constructor to initialize the Leaflet map
     constructor(containerId, center, zoom) {
-        // Create the map instance and set its view to the given coordinates and zoom level
         this.map = L.map(containerId).setView(center, zoom);
-        // Initialize the tile layer for the map
         this.initTileLayer();
     }
 
-    // Method to initialize the tile layer using OpenStreetMap tiles
     initTileLayer() {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19, // Set the maximum zoom level
+            maxZoom: 19, 
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' // Attribution for tile data
-        }).addTo(this.map); // Add the tile layer to the map
+        }).addTo(this.map); 
     }
 
-    // Method to add a marker to the map
-    addMarker(lat, lng, message) {
-        // Create a marker at the specified latitude and longitude
+    addMarker(lat, lng, title) {
         const marker = L.marker([lat, lng]).addTo(this.map);
-        // Bind a popup to the marker that displays the message
-        marker.bindPopup(message);
+        marker.bindPopup(title);
     }
 
-    // Method to load markers from a JSON file
     loadMarkersFromJson(url) {
-        // Fetch the JSON data from the given URL
+      
         fetch(url)
-            .then(response => response.json()) // Parse the JSON response
+            .then(response => response.json()) 
             .then(data => {
-                // Iterate over each marker in the data
                 data.forEach(marker => {
-                    // Add each marker to the map using its latitude, longitude, and message
-                    this.addMarker(marker.latitude, marker.longitude, marker.message);
+                    this.addMarker(marker.latitude, marker.longitude, marker.title);
                 });
             })
-            .catch(error => console.error('Error loading markers:', error)); // Log any errors that occur
+            .catch(error => console.error('Error loading markers:', error)); 
     }
 }
 
-// Create an instance of LeafletMap with specified container ID, center coordinates, and zoom level
 const myMap = new LeafletMap('map', [8.360004, 124.868419], 18);
-
-// Example of adding markers directly (commented out for demonstration)
-// myMap.addMarker(8.359735, 124.869206, 'CCS Faculty Office');
-// myMap.addMarker(8.359639, 124.869179, 'CCS Laboratory 1');
-// myMap.addMarker(8.359554, 124.869153, 'CCS Laboratory 2');
 
 // Load markers from an external JSON file
 myMap.loadMarkersFromJson('map-data.json');
+
+class LocationCard {
+    constructor(title) {
+        this.title = title;
+    }
+
+    createCard() {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'card location-card';
+        cardDiv.innerHTML = `
+            <div class="card-body">
+                <h5 class="card-title">${this.title}</h5>
+            </div>
+        `;
+        return cardDiv;
+    }
+}
+
+class LocationRenderer {
+    constructor(containerId, searchInputId) {
+        this.container = document.getElementById(containerId);
+        this.searchInput = document.getElementById(searchInputId);
+        this.appletData = [];
+        this.filteredData = [];
+        this.searchInput.addEventListener('input', () => this.filterLocations());
+    }
+
+    fetchLocationData(url) {
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                this.appletData = data;
+                this.filteredData = data;  // initially show all locations
+                this.renderLocation(this.filteredData);  // render all initially
+            })
+            .catch(error => console.error('Error loading location data:', error));
+    }
+
+    renderLocation(data) {
+        this.container.innerHTML = '';  // clear the container before rendering new items
+        data.forEach(location => {
+            const locationCard = new LocationCard(location.title);
+            const cardElement = locationCard.createCard();
+            this.container.appendChild(cardElement);
+        });
+    }
+
+    filterLocations() {
+        const query = this.searchInput.value.toLowerCase();  // get search query
+        this.filteredData = this.appletData.filter(location =>
+            location.title.toLowerCase().includes(query) || 
+            (location.description && location.description.toLowerCase().includes(query))  // check description as well
+        );
+        this.renderLocation(this.filteredData);  // render the filtered data
+    }
+}
+
+const locationRenderer = new LocationRenderer('location-container', 'searchLocation');
+locationRenderer.fetchLocationData('map-data.json');
