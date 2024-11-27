@@ -14,10 +14,22 @@ class LeafletMap {
 
     addMarker(lat, lng, title) {
         const marker = L.marker([lat, lng]).addTo(this.map);
-        marker.bindPopup(title);
+        
+        const popupContent = `
+            <div class="popup-content">
+                <h3>${title}</h3>
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQepD_lSJSEvx4gh9J_TTY8FI_oylNWRkbcA&s" class="card-img-top" alt="...">
+                <p><strong>Latitude:</strong> ${lat}</p>
+                <p><strong>Longitude:</strong> ${lng}</p>
+                <a href="#" target="_blank">Learn more</a>
+            </div>
+        `;
+        
+        marker.bindPopup(popupContent);
         this.markers.push({ lat, lng, title, marker });
-        return marker; // Return the marker for later use
+        return marker;
     }
+    
 
     openPopup(lat, lng) {
         const marker = this.markers.find(m => m.lat === lat && m.lng === lng);
